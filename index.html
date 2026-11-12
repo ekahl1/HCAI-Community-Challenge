@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Niner Orbit | UNCC Smart Parking & Traffic Telemetry</title>
+
+  <!-- Tailwind CSS for responsive layout & utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Orbitron (Sporty Space HUD) & Inter (Clean Legibility) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome for crisp automotive, space, and navigation icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            hud: ['Orbitron', 'sans-serif'],
+          },
+          colors: {
+            epcot: {
+              ice: '#f0f9ff',
+              mint: '#ecfdf5',
+              sky: '#0ea5e9',
+              cyan: '#38bdf8',
+              emerald: '#10b981',
+              seafoam: '#34d399',
+              slate: '#0f172a',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* ==========================================================================
+       EPCOT GEODESIC LATTICE & SPORTY SPACE TELEMETRY THEME
+       Palette: Luminous Whites, Ice Blues, and Mint Greens
+       ========================================================================== */
+    :root {
+      --bg-base: #f4fbff;
+      --mint-glow: rgba(16, 185, 129, 0.22);
+      --sky-glow: rgba(14, 165, 233, 0.22);
+    }
+
+    body {
+      background-color: var(--bg-base);
+      /* Epcot Spaceship Earth inspired geodesic triangle tessellation pattern */
+      background-image:
+        radial-gradient(circle at 12% 15%, rgba(56, 189, 248, 0.16) 0%, transparent 42%),
+        radial-gradient(circle at 88% 20%, rgba(52, 211, 153, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(186, 230, 253, 0.25) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg width='84' height='72' viewBox='0 0 84 72' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%230ea5e9' stroke-opacity='0.08' stroke-width='1'%3E%3Cpath d='M42 0 L84 72 L0 72 Z'/%3E%3Cpath d='M42 72 L84 0 L0 0 Z'/%3E%3Cpath d='M42 0 L42 72'/%3E%3Cpath d='M0 36 L84 36'/%3E%3C/g%3E%3C/svg%3E");
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    /* Frosted Space-Deck Glass Panels */
+    .epcot-panel {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(186, 230, 253, 0.85);
+      box-shadow:
+        0 10px 30px -10px rgba(14, 165, 233, 0.12),
+        0 4px 12px -4px rgba(16, 185, 129, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .epcot-panel:hover {
+      border-color: rgba(52, 211, 153, 0.75);
+      box-shadow:
+        0 16px 36px -12px rgba(14, 165, 233, 0.18),
+        0 6px 18px -4px rgba(16, 185, 129, 0.14);
+    }
+
+    /* Active Assigned Card Aura */
+    .assigned-glow {
+      border: 2px solid #10b981 !important;
+      box-shadow:
+        0 0 0 4px rgba(16, 185, 129, 0.14),
+        0 18px 40px -12px rgba(14, 165, 233, 0.25) !important;
+    }
+
+    /* Sporty Aerodynamic Primary Button */
+    .btn-aero {
+      background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .btn-aero::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 45%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+      transform: rotate(25deg);
+      transition: left 0.6s ease;
+    }
+
+    .btn-aero:hover::after {
+      left: 130%;
+    }
+
+    .btn-aero:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px -6px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-aero:active {
+      transform: translateY(0);
+    }
+
+    /* Slow Geodesic Sphere Rotation */
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .geodesic-spin {
+      animation: spinSlow 48s linear infinite;
+    }
+
+    /* Telemetry Pulse Dot */
+    @keyframes pulseRing {
+      0% { transform: scale(0.85); opacity: 0.9; }
+      70% { transform: scale(1.9); opacity: 0; }
+      100% { transform: scale(1.9); opacity: 0; }
+    }
+
+    .telemetry-pulse::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 9999px;
+      background: inherit;
+      animation: pulseRing 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+
+    /* Custom Sleek Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f0f9ff;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #7dd3fc, #6ee7b7);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-emerald-200 selection:text-slate-900">
+
+  <!-- ========================================================================
+       TOAST / HUD NOTIFICATION BANNER (Replaces any browser alert())
+       ======================================================================== -->
+  <div id="hudToastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-[calc(100%-2rem)]"></div>
+
+  <!-- ========================================================================
+       TOP COCKPIT TELEMETRY HEADER
+       ======================================================================== -->
+  <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-sky-200/80 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Identity: Epcot Geodesic Sphere + Sporty Aero Emblem -->
+      <div class="flex items-center gap-3">
+        <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-100 via-white to-emerald-100 border border-sky-300/80 flex items-center justify-center shadow-inner">
+          <!-- Custom Inline SVG Epcot-Inspired Geodesic Sphere -->
+          <svg class="w-8 h-8 geodesic-spin text-sky-500" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="28" stroke="url(#epcotGrad)" stroke-width="2.2" />
+            <polygon points="32,4 54,20 46,48 18,48 10,20" stroke="#10b981" stroke-width="1.4" fill="rgba(16,185,129,0.06)" />
+            <polygon points="32,4 46,48 10,20 54,20 18,48" stroke="#0ea5e9" stroke-width="1.2" />
+            <circle cx="32" cy="32" r="9" stroke="#10b981" stroke-width="1.5" fill="#ffffff" />
+            <path d="M27 32 L31 35 L38 28" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <defs>
+              <linearGradient id="epcotGrad" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#0ea5e9" />
+                <stop offset="1" stop-color="#10b981" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-hud text-lg sm:text-xl font-extrabold tracking-wider bg-gradient-to-r from-sky-600 via-teal-500 to-emerald-500 bg-clip-text text-transparent">
+              NINER ORBIT
+            </h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-hud font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-300">
+              UNCC AUTO-GRID
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 font-medium">
+            UNC Charlotte Geodesic Traffic &amp; Smart Stall Telemetry
+          </p>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Status Pills & Traffic Scenario Controls -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <!-- Live Open Stalls Counter -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sky-50/90 border border-sky-200">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="telemetry-pulse relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <div class="text-xs">
+            <span class="text-slate-500 font-medium">Campus Open:</span>
+            <span id="headerTotalOpen" class="font-hud font-bold text-slate-800 ml-1">--</span>
+          </div>
+        </div>
+
+        <!-- Traffic Simulation Mode Selector -->
+        <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-sky-200/80 text-xs">
+          <button type="button" data-traffic="normal" class="traffic-mode-btn px-2.5 py-1 rounded-lg font-semibold transition bg-white text-sky-700 shadow-sm">
+            <i class="fa-solid fa-gauge-high mr-1 text-emerald-500"></i>Live Flow
+          </button>
+          <button type="button" data-traffic="rush" class="traffic-mode-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-sky-700 transition">
+            <i class="fa-solid fa-bolt mr-1 text-amber-500"></i>Class Rush
+          </button>
+          <button type="button" data-traffic="clear" class="traffic-mode-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-sky-700 transition">
+            <i class="fa-solid fa-wind mr-1 text-sky-500"></i>Clear Orbit
+          </button>
+        </div>
+
+        <!-- Telemetry Audio Toggle -->
+        <button id="audioToggleBtn" type="button" title="Toggle HUD Telemetry Chimes" class="p-2 rounded-xl bg-white hover:bg-sky-50 border border-sky-200 text-sky-600 transition" aria-label="Toggle Telemetry Sound">
+          <i id="audioIcon" class="fa-solid fa-volume-high text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN COCKPIT WORKSPACE
+       ======================================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- ====================================================================
+           LEFT COLUMN (4 COLS): ROUTE VECTOR CONFIGURATOR & ASSIGNED STALL HUD
+           ==================================================================== -->
+      <section class="lg:col-span-4 flex flex-col gap-6">
+
+        <!-- Route & Optimization Controls Card -->
+        <div class="epcot-panel rounded-3xl p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-emerald-400 text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-car-side text-sm"></i>
+              </div>
+              <div>
+                <h2 class="font-hud text-sm font-bold tracking-wide text-slate-800 uppercase">Flight &amp; Drive Plan</h2>
+                <p class="text-[11px] text-slate-500">Configure UNCC entry &amp; destination</p>
+              </div>
+            </div>
+            <span id="trafficMultiplierBadge" class="px-2.5 py-1 rounded-full text-[11px] font-hud font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              1.0x FLOW
+            </span>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Campus Entry Gate Selector -->
+            <div>
+              <label for="originSelect" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <i class="fa-solid fa-road text-sky-500 mr-1.5"></i>Campus Entry Corridor
+              </label>
+              <select id="originSelect" class="w-full rounded-2xl bg-sky-50/60 border border-sky-200 px-3.5 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition">
+                <option value="hwy49">Hwy 49 / Main Gate (Cameron Blvd)</option>
+                <option value="ucity">University City Blvd / Broadrick Blvd</option>
+                <option value="jwclay">JW Clay Blvd / West Campus Entrance</option>
+                <option value="cri">Mallard Creek Church Rd / CRI Gate</option>
+              </select>
+            </div>
+
+            <!-- Target UNCC Building Selector -->
+            <div>
+              <label for="destinationSelect" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <i class="fa-solid fa-location-crosshairs text-emerald-500 mr-1.5"></i>Target Campus Building
+              </label>
+              <select id="destinationSelect" class="w-full rounded-2xl bg-emerald-50/50 border border-emerald-200 px-3.5 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition">
+                <option value="union">Popp Martin Student Union</option>
+                <option value="library">J. Murrey Atkins Library</option>
+                <option value="epic">EPIC (Engineering &amp; Infrastructure)</option>
+                <option value="woodward">Woodward Hall (Computing &amp; Informatics)</option>
+                <option value="fretwell">Fretwell Hall</option>
+                <option value="belk">Belk Gymnasium / UREC</option>
+                <option value="stadium">Jerry Richardson Stadium</option>
+              </select>
+            </div>
+
+            <!-- Favorite Garages Only Toggle Box -->
+            <div class="p-3.5 rounded-2xl bg-gradient-to-r from-sky-50 via-white to-emerald-50 border border-sky-200/90 flex items-center justify-between gap-3">
+              <div class="flex items-start gap-2.5">
+                <div class="mt-0.5 text-amber-400">
+                  <i class="fa-solid fa-star text-base"></i>
+                </div>
+                <div>
+                  <label for="favoritesOnlyToggle" class="text-xs font-bold text-slate-800 cursor-pointer block">
+                    Favorites-Only Lock
+                  </label>
+                  <p class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                    Assign strictly from your <span id="favCountLabel" class="font-bold text-sky-600">2</span> starred decks
+                  </p>
+                </div>
+              </div>
+
+              <!-- Custom Accessible Switch -->
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="favoritesOnlyToggle" class="sr-only peer" />
+                <div class="w-12 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-sky-500 peer-checked:to-emerald-500 shadow-inner"></div>
+              </label>
+            </div>
+
+            <!-- Primary Optimize & Assign Button -->
+            <button id="optimizeBtn" type="button" class="btn-aero w-full py-3.5 px-5 rounded-2xl text-white font-hud font-bold text-xs sm:text-sm tracking-wider uppercase shadow-lg flex items-center justify-center gap-2.5 cursor-pointer">
+              <i class="fa-solid fa-satellite-dish"></i>
+              <span>Optimize Route &amp; Assign Stall</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             DESIGNATED SLOT & TELEMETRY ASSIGNMENT HUD CARD
+             ================================================================== -->
+        <div id="assignmentCard" class="epcot-panel assigned-glow rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+          <!-- Decorative Geodesic Corner Mesh -->
+          <div class="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-gradient-to-br from-sky-200/40 to-emerald-200/40 pointer-events-none"></div>
+
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-hud font-bold uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              STALL LOCKED &amp; RESERVED
+            </span>
+            <div class="text-right">
+              <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">Hold Timer</span>
+              <span id="holdTimerDisplay" class="font-hud text-xs font-bold text-sky-600">14:59</span>
+            </div>
+          </div>
+
+          <!-- Assigned Deck & Stall Readout -->
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50 border border-emerald-200/90 mb-4">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-sky-600">Designated Garage</p>
+                <h3 id="assignedDeckName" class="font-hud text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5">
+                  Union Deck
+                </h3>
+              </div>
+              <button id="assignedFavBtn" type="button" title="Toggle Favorite Garage" class="w-9 h-9 rounded-xl bg-white border border-sky-200 flex items-center justify-center text-amber-400 hover:scale-105 transition shadow-sm">
+                <i class="fa-solid fa-star"></i>
+              </button>
+            </div>
+
+            <!-- Exact Stall Telemetry Ticket -->
+            <div class="mt-3 pt-3 border-t border-sky-100 flex items-center justify-between gap-2">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block">Assigned Bay &amp; Slot</span>
+                <span id="assignedSlotCode" class="font-hud text-sm sm:text-base font-bold text-emerald-600">
+                  LVL 3 • SECTOR B • #314
+                </span>
+              </div>
+              <span id="assignedPermitTag" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-sky-100 text-sky-800 border border-sky-200">
+                Commuter / Visitor
+              </span>
+            </div>
+          </div>
+
+          <!-- Speed & Time Telemetry Metrics (3-Column Sporty Gauge Strip) -->
+          <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+            <div class="p-2.5 rounded-2xl bg-sky-50/80 border border-sky-200/80">
+              <i class="fa-solid fa-car text-sky-500 text-xs mb-1"></i>
+              <div id="assignedDriveTime" class="font-hud text-base font-extrabold text-slate-800">4m</div>
+              <div class="text-[10px] font-semibold text-slate-500 uppercase">Drive ETA</div>
+            </div>
+            <div class="p-2.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/80">
+              <i class="fa-solid fa-person-walking text-emerald-500 text-xs mb-1"></i>
+              <div id="assignedWalkTime" class="font-hud text-base font-extrabold text-slate-800">3m</div>
+              <div class="text-[10px] font-semibold text-slate-500 uppercase">Walk ETA</div>
+            </div>
+            <div class="p-2.5 rounded-2xl bg-gradient-to-b from-sky-50 to-emerald-50 border border-teal-200/80">
+              <i class="fa-solid fa-stopwatch text-teal-600 text-xs mb-1"></i>
+              <div id="assignedTotalTime" class="font-hud text-base font-extrabold text-teal-700">7m</div>
+              <div class="text-[10px] font-semibold text-slate-500 uppercase">Total Trip</div>
+            </div>
+          </div>
+
+          <!-- Turn-by-Turn Vector Guidance -->
+          <div class="mb-4">
+            <h4 class="text-[11px] font-hud font-bold uppercase tracking-wider text-slate-500 mb-2">
+              <i class="fa-solid fa-route text-sky-500 mr-1"></i>Optimized Campus Vector
+            </h4>
+            <ol id="routeStepsList" class="space-y-2 text-xs text-slate-700">
+              <!-- Populated dynamically via JS -->
+            </ol>
+          </div>
+
+          <!-- Pass Actions -->
+          <div class="flex items-center gap-2">
+            <button id="copyPassBtn" type="button" class="flex-1 py-2.5 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+              <i class="fa-regular fa-copy"></i>
+              <span>Copy Stall Pass</span>
+            </button>
+            <button id="rerollSlotBtn" type="button" class="py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer" title="Assign another open stall in this deck">
+              <i class="fa-solid fa-rotate"></i>
+              <span>New Stall</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           RIGHT COLUMN (8 COLS): GEODESIC CAMPUS RADAR MAP & GARAGE TELEMETRY
+           ==================================================================== -->
+      <section class="lg:col-span-8 flex flex-col gap-6">
+
+        <!-- Interactive Campus Tactical Radar & Trajectory Map -->
+        <div class="epcot-panel rounded-3xl p-4 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="font-hud text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide">
+                  UNCC Geodesic Traffic &amp; Trajectory Radar
+                </h2>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-hud font-bold bg-sky-100 text-sky-700">
+                  LIVE TELEMETRY
+                </span>
+              </div>
+              <p class="text-xs text-slate-500">
+                Tap any parking deck node on the radar to inspect capacity or toggle favorite status
+              </p>
+            </div>
+
+            <!-- Radar Legend -->
+            <div class="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-600 bg-white/90 px-3 py-1.5 rounded-xl border border-sky-100">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Optimal (&gt;35%)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span>Moderate</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>Tight (&lt;15%)</span>
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-star text-amber-400"></i>Favorite</span>
+            </div>
+          </div>
+
+          <!-- Responsive Canvas Container -->
+          <div id="radarContainer" class="relative w-full h-[320px] sm:h-[380px] rounded-2xl overflow-hidden border border-sky-200 bg-gradient-to-b from-sky-50/90 via-white to-emerald-50/80 shadow-inner">
+            <canvas id="campusRadarCanvas" class="w-full h-full block cursor-pointer"></canvas>
+
+            <!-- Floating Sporty Speed / Road Condition Overlay -->
+            <div class="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+              <div class="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur-md border border-sky-200/90 shadow-sm text-[11px] flex items-center gap-3">
+                <span><strong class="text-sky-700">Hwy 49:</strong> <span id="roadHwy49Status" class="text-emerald-600 font-semibold">Smooth</span></span>
+                <span class="text-slate-300">|</span>
+                <span><strong class="text-sky-700">U-City Blvd:</strong> <span id="roadUCityStatus" class="text-emerald-600 font-semibold">Smooth</span></span>
+                <span class="text-slate-300">|</span>
+                <span><strong class="text-sky-700">Craver/Mary Alex:</strong> <span id="roadCoreStatus" class="text-sky-600 font-semibold">Nominal</span></span>
+              </div>
+
+              <div class="px-3 py-1.5 rounded-xl bg-slate-900/85 text-white backdrop-blur-md text-[11px] font-hud flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-car-burst text-emerald-400"></i>
+                <span id="radarActiveLabel">ACTIVE ROUTE: UNION DECK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             UNCC PARKING DECKS & FAVORITES TELEMETRY GRID
+             ================================================================== -->
+        <div class="epcot-panel rounded-3xl p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <h2 class="font-hud text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide">
+                UNC Charlotte Parking Decks
+              </h2>
+              <p class="text-xs text-slate-500">
+                Star your preferred garages to enable Favorites-Only auto-routing
+              </p>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-1.5 bg-sky-50/90 p-1 rounded-xl border border-sky-200/80 text-xs">
+              <button type="button" data-filter="all" class="deck-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-white text-sky-700 shadow-sm transition cursor-pointer">
+                All Decks (8)
+              </button>
+              <button type="button" data-filter="favorites" class="deck-filter-btn px-3 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-sky-700 transition cursor-pointer">
+                <i class="fa-solid fa-star text-amber-400 mr-1"></i>Favorites (<span id="tabFavCount">2</span>)
+              </button>
+              <button type="button" data-filter="available" class="deck-filter-btn px-3 py-1.5 rounded-lg font-semibold text-slate-600 hover:text-sky-700 transition cursor-pointer">
+                Most Open
+              </button>
+            </div>
+          </div>
+
+          <!-- Responsive Cards Grid -->
+          <div id="decksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       FOOTER
+       ======================================================================== -->
+  <footer class="mt-8 border-t border-sky-200/70 bg-white/70 backdrop-blur-sm py-4 px-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span class="font-hud font-semibold text-slate-700">NINER ORBIT // UNC CHARLOTTE MOBILITY TELEMETRY</span>
+      <span>Simulated real-time campus traffic &amp; deck capacity engine • Go Niners!</span>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       APPLICATION LOGIC & TELEMETRY SIMULATION ENGINE
+       ======================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ----------------------------------------------------------------------
+         1. AUTHENTIC UNC CHARLOTTE CAMPUS DATA MODEL
+         ---------------------------------------------------------------------- */
+      const ENTRY_GATES = {
+        hwy49: {
+          id: 'hwy49',
+          name: 'Hwy 49 / Main Gate (Cameron Blvd)',
+          shortName: 'Hwy 49 Gate',
+          coords: { x: 0.62, y: 0.90 },
+          roadKey: 'hwy49'
+        },
+        ucity: {
+          id: 'ucity',
+          name: 'University City Blvd / Broadrick Blvd',
+          shortName: 'U-City Blvd Gate',
+          coords: { x: 0.28, y: 0.12 },
+          roadKey: 'ucity'
+        },
+        jwclay: {
+          id: 'jwclay',
+          name: 'JW Clay Blvd / West Campus Entrance',
+          shortName: 'JW Clay Gate',
+          coords: { x: 0.08, y: 0.56 },
+          roadKey: 'ucity'
+        },
+        cri: {
+          id: 'cri',
+          name: 'Mallard Creek Church Rd / CRI Gate',
+          shortName: 'CRI Gate',
+          coords: { x: 0.88, y: 0.14 },
+          roadKey: 'cri'
+        }
+      };
+
+      const CAMPUS_BUILDINGS = {
+        union: {
+          id: 'union',
+          name: 'Popp Martin Student Union',
+          shortName: 'Student Union',
+          coords: { x: 0.39, y: 0.48 }
+        },
+        library: {
+          id: 'library',
+          name: 'J. Murrey Atkins Library',
+          shortName: 'Atkins Library',
+          coords: { x: 0.50, y: 0.54 }
+        },
+        epic: {
+          id: 'epic',
+          name: 'EPIC (Engineering & Infrastructure)',
+          shortName: 'EPIC Building',
+          coords: { x: 0.81, y: 0.32 }
+        },
+        woodward: {
+          id: 'woodward',
+          name: 'Woodward Hall (Computing & Informatics)',
+          shortName: 'Woodward Hall',
+          coords: { x: 0.63, y: 0.44 }
+        },
+        fretwell: {
+          id: 'fretwell',
+          name: 'Fretwell Hall',
+          shortName: 'Fretwell Hall',
+          coords: { x: 0.54, y: 0.66 }
+        },
+        belk: {
+          id: 'belk',
+          name: 'Belk Gymnasium / UREC',
+          shortName: 'UREC / Belk Gym',
+          coords: { x: 0.32, y: 0.63 }
+        },
+        stadium: {
+          id: 'stadium',
+          name: 'Jerry Richardson Stadium',
+          shortName: 'Richardson Stadium',
+          coords: { x: 0.68, y: 0.25 }
+        }
+      };
+
+      // 8 Real UNC Charlotte Parking Decks with base drive/walk matrices & coordinates
+      const PARKING_DECKS = [
+        {
+          id: 'union_deck',
+          name: 'Union Deck',
+          zone: 'Central-West Core',
+          permit: 'Commuter / Visitor',
+          totalSpots: 1250,
+          openSpots: 368,
+          levels: 5,
+          coords: { x: 0.33, y: 0.41 },
+          baseDriveMins: { hwy49: 6, ucity: 4, jwclay: 3, cri: 8 },
+          walkMins: { union: 2, library: 5, epic: 14, woodward: 9, fretwell: 7, belk: 4, stadium: 11 },
+          roadSegments: {
+            hwy49: ['Cameron Blvd North', 'Mary Alexander Rd', 'Craver Rd'],
+            ucity: ['Broadrick Blvd South', 'Alumni Way'],
+            jwclay: ['JW Clay Blvd East', 'Alumni Way'],
+            cri: ['Robert D. Snyder Rd', 'Craver Rd']
+          }
+        },
+        {
+          id: 'cone_deck',
+          name: 'Cone Deck 1 & 2',
+          zone: 'South-Central Core',
+          permit: 'Commuter / Faculty',
+          totalSpots: 980,
+          openSpots: 215,
+          levels: 4,
+          coords: { x: 0.43, y: 0.65 },
+          baseDriveMins: { hwy49: 4, ucity: 6, jwclay: 5, cri: 9 },
+          walkMins: { union: 4, library: 3, epic: 15, woodward: 8, fretwell: 3, belk: 3, stadium: 14 },
+          roadSegments: {
+            hwy49: ['University Rd', 'Cone Access Loop'],
+            ucity: ['Broadrick Blvd', 'Mary Alexander Rd South'],
+            jwclay: ['JW Clay Blvd', 'Mary Alexander Rd'],
+            cri: ['Cameron Blvd South', 'University Rd']
+          }
+        },
+        {
+          id: 'east_deck_1',
+          name: 'East Deck 1',
+          zone: 'East Academic Sector',
+          permit: 'Commuter',
+          totalSpots: 1100,
+          openSpots: 490,
+          levels: 5,
+          coords: { x: 0.67, y: 0.56 },
+          baseDriveMins: { hwy49: 3, ucity: 7, jwclay: 8, cri: 6 },
+          walkMins: { union: 9, library: 6, epic: 8, woodward: 4, fretwell: 5, belk: 10, stadium: 9 },
+          roadSegments: {
+            hwy49: ['Cameron Blvd North', 'East Deck Access Rd'],
+            ucity: ['University City Blvd East', 'Cameron Blvd'],
+            jwclay: ['Mary Alexander Rd East', 'Cameron Blvd'],
+            cri: ['Robert D. Snyder Rd South', 'Cameron Blvd']
+          }
+        },
+        {
+          id: 'east_deck_2',
+          name: 'East Deck 2 & 3',
+          zone: 'East Engineering Sector',
+          permit: 'Commuter',
+          totalSpots: 1450,
+          openSpots: 675,
+          levels: 5,
+          coords: { x: 0.74, y: 0.45 },
+          baseDriveMins: { hwy49: 4, ucity: 7, jwclay: 9, cri: 5 },
+          walkMins: { union: 10, library: 7, epic: 5, woodward: 3, fretwell: 7, belk: 12, stadium: 7 },
+          roadSegments: {
+            hwy49: ['Cameron Blvd North', 'Phillips Rd'],
+            ucity: ['University City Blvd', 'Phillips Rd'],
+            jwclay: ['Mary Alexander Rd', 'Phillips Rd'],
+            cri: ['Robert D. Snyder Rd', 'Phillips Rd']
+          }
+        },
+        {
+          id: 'west_deck',
+          name: 'West Deck',
+          zone: 'West Athletics & UREC',
+          permit: 'Commuter',
+          totalSpots: 1050,
+          openSpots: 410,
+          levels: 4,
+          coords: { x: 0.21, y: 0.55 },
+          baseDriveMins: { hwy49: 6, ucity: 5, jwclay: 2, cri: 10 },
+          walkMins: { union: 5, library: 8, epic: 17, woodward: 12, fretwell: 9, belk: 2, stadium: 14 },
+          roadSegments: {
+            hwy49: ['Cameron Blvd', 'Mary Alexander Rd West'],
+            ucity: ['Broadrick Blvd', 'John Kirk Dr'],
+            jwclay: ['JW Clay Blvd East', 'West Deck Spur'],
+            cri: ['University City Blvd West', 'John Kirk Dr']
+          }
+        },
+        {
+          id: 'north_deck',
+          name: 'North Deck',
+          zone: 'North Residential & Greek',
+          permit: 'Resident / Commuter',
+          totalSpots: 1180,
+          openSpots: 520,
+          levels: 5,
+          coords: { x: 0.47, y: 0.24 },
+          baseDriveMins: { hwy49: 7, ucity: 3, jwclay: 5, cri: 5 },
+          walkMins: { union: 6, library: 8, epic: 10, woodward: 7, fretwell: 11, belk: 9, stadium: 6 },
+          roadSegments: {
+            hwy49: ['Cameron Blvd North', 'Craver Rd North'],
+            ucity: ['Broadrick Blvd', 'North Deck Way'],
+            jwclay: ['JW Clay Blvd', 'Broadrick Blvd North'],
+            cri: ['University City Blvd West', 'North Deck Way']
+          }
+        },
+        {
+          id: 'cri_deck',
+          name: 'CRI Deck',
+          zone: 'Charlotte Research Institute',
+          permit: 'Commuter / CRI',
+          totalSpots: 1300,
+          openSpots: 785,
+          levels: 5,
+          coords: { x: 0.80, y: 0.21 },
+          baseDriveMins: { hwy49: 6, ucity: 6, jwclay: 9, cri: 2 },
+          walkMins: { union: 14, library: 12, epic: 2, woodward: 8, fretwell: 13, belk: 16, stadium: 4 },
+          roadSegments: {
+            hwy49: ['Cameron Blvd North', 'Robert D. Snyder Rd'],
+            ucity: ['University City Blvd East', 'Institute Cir'],
+            jwclay: ['University City Blvd East', 'Institute Cir'],
+            cri: ['Mallard Creek Church Rd', 'Institute Cir']
+          }
+        },
+        {
+          id: 'south_village',
+          name: 'South Village Deck',
+          zone: 'South Village / SoVi',
+          permit: 'Resident / Commuter',
+          totalSpots: 920,
+          openSpots: 128,
+          levels: 4,
+          coords: { x: 0.53, y: 0.81 },
+          baseDriveMins: { hwy49: 2, ucity: 8, jwclay: 7, cri: 9 },
+          walkMins: { union: 8, library: 6, epic: 16, woodward: 10, fretwell: 4, belk: 6, stadium: 16 },
+          roadSegments: {
+            hwy49: ['Hwy 49 Main Gate', 'South Village Loop'],
+            ucity: ['Broadrick Blvd', 'Cameron Blvd South'],
+            jwclay: ['Mary Alexander Rd', 'South Village Loop'],
+            cri: ['Cameron Blvd South', 'South Village Loop']
+          }
+        }
+      ];
+
+      /* ----------------------------------------------------------------------
+         2. APPLICATION STATE
+         ---------------------------------------------------------------------- */
+      const STORAGE_KEY_FAVS = 'niner_orbit_favorite_decks_v1';
+
+      function loadInitialFavorites() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY_FAVS);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return new Set(parsed);
+          }
+        } catch (err) {
+          console.warn('LocalStorage unavailable, using default favorites.', err);
+        }
+        // Default favorites: Union Deck and East Deck 2 & 3
+        return new Set(['union_deck', 'east_deck_2']);
+      }
+
+      const state = {
+        origin: 'hwy49',
+        destination: 'union',
+        favorites: loadInitialFavorites(),
+        favoritesOnly: false,
+        deckFilter: 'all', // 'all' | 'favorites' | 'available'
+        trafficMode: 'normal', // 'normal' | 'rush' | 'clear'
+        audioEnabled: true,
+        assignedDeckId: 'union_deck',
+        assignedStall: 'LVL 3 • SECTOR B • #314',
+        holdSecondsRemaining: 899, // 14:59
+        carAnimProgress: 0,
+        pulsePhase: 0
+      };
+
+      /* ----------------------------------------------------------------------
+         3. OPTIONAL WEB AUDIO TELEMETRY CHIME (ZERO EXTERNAL SOUND URLs)
+         ---------------------------------------------------------------------- */
+      let audioCtx = null;
+
+      function playTelemetryChime(type = 'assign') {
+        if (!state.audioEnabled) return;
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          if (!audioCtx) audioCtx = new AudioContextClass();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+
+          osc.type = 'sine';
+          if (type === 'assign') {
+            osc.frequency.setValueAtTime(523.25, now); // C5
+            osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.14); // G5
+            osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.28); // C6
+          } else if (type === 'fav') {
+            osc.frequency.setValueAtTime(659.25, now); // E5
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+          } else {
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(349.23, now + 0.14);
+          }
+
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.34);
+        } catch (e) {
+          // Ignore audio blocks gracefully
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         4. TOAST NOTIFICATION SYSTEM (NO alert() EVER)
+         ---------------------------------------------------------------------- */
+      function showToast(title, message, tone = 'info') {
+        const container = document.getElementById('hudToastContainer');
+        const toast = document.createElement('div');
+
+        const styles = {
+          success: 'border-emerald-300 bg-white/95 text-slate-800',
+          warning: 'border-amber-300 bg-white/95 text-slate-800',
+          info: 'border-sky-300 bg-white/95 text-slate-800'
+        };
+        const icons = {
+          success: '<i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>',
+          warning: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-base"></i>',
+          info: '<i class="fa-solid fa-satellite text-sky-500 text-base"></i>'
+        };
+
+        toast.className = `pointer-events-auto rounded-2xl border p-3.5 shadow-lg backdrop-blur-md flex items-start gap-3 transition-all duration-300 translate-x-4 opacity-0 ${styles[tone] || styles.info}`;
+        toast.innerHTML = `
+          <div class="mt-0.5">${icons[tone] || icons.info}</div>
+          <div class="flex-1 min-w-0">
+            <p class="font-hud text-xs font-bold text-slate-900">${title}</p>
+            <p class="text-xs text-slate-600 mt-0.5 leading-snug">${message}</p>
+          </div>
+        `;
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+          toast.classList.remove('translate-x-4', 'opacity-0');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('translate-x-4', 'opacity-0');
+          setTimeout(() => toast.remove(), 300);
+        }, 3600);
+      }
+
+      /* ----------------------------------------------------------------------
+         5. TRAFFIC & ROUTE OPTIMIZATION ENGINE
+         ---------------------------------------------------------------------- */
+      function getTrafficMultiplier() {
+        if (state.trafficMode === 'rush') return 1.65;
+        if (state.trafficMode === 'clear') return 0.85;
+        return 1.0;
+      }
+
+      function computeDeckTelemetry(deck) {
+        const mult = getTrafficMultiplier();
+        const baseDrive = deck.baseDriveMins[state.origin] || 5;
+        const driveMins = Math.max(2, Math.round(baseDrive * mult));
+        const walkMins = deck.walkMins[state.destination] || 6;
+        const totalMins = driveMins + walkMins;
+
+        const pctOpen = Math.round((deck.openSpots / deck.totalSpots) * 100);
+        // Congestion penalty if deck is nearly full (<12% open)
+        const scarcityPenalty = pctOpen < 10 ? 7 : pctOpen < 20 ? 3 : 0;
+
+        // Weighted optimization score (lower is better)
+        const optimizationScore = driveMins * 1.2 + walkMins * 1.15 + scarcityPenalty;
+
+        return {
+          ...deck,
+          driveMins,
+          walkMins,
+          totalMins,
+          pctOpen,
+          optimizationScore
+        };
+      }
+
+      function generateStallCode(deck) {
+        const level = Math.floor(Math.random() * deck.levels) + 1;
+        const sectors = ['A', 'B', 'C', 'D'];
+        const sector = sectors[Math.floor(Math.random() * sectors.length)];
+        const stallNum = level * 100 + Math.floor(Math.random() * 88) + 10;
+        return `LVL ${level} • SECTOR ${sector} • #${stallNum}`;
+      }
+
+      function optimizeAndAssign(forcedDeckId = null, silent = false) {
+        let candidates = PARKING_DECKS.map(computeDeckTelemetry);
+
+        if (forcedDeckId) {
+          const chosen = candidates.find(d => d.id === forcedDeckId);
+          if (chosen) {
+            applyAssignment(chosen, silent);
+            return;
+          }
+        }
+
+        // Apply Favorites-Only Filter if enabled
+        if (state.favoritesOnly) {
+          const favCandidates = candidates.filter(d => state.favorites.has(d.id));
+          if (favCandidates.length === 0) {
+            showToast(
+              'No Favorite Garages Starred',
+              'Star at least one parking deck below, or switch off Favorites-Only Lock.',
+              'warning'
+            );
+            playTelemetryChime('warn');
+            return;
+          }
+          candidates = favCandidates;
+        }
+
+        // Sort by lowest optimizationScore (fastest drive + walk + availability)
+        candidates.sort((a, b) => a.optimizationScore - b.optimizationScore);
+        const bestDeck = candidates[0];
+        applyAssignment(bestDeck, silent);
+      }
+
+      function applyAssignment(deckTelemetry, silent = false) {
+        state.assignedDeckId = deckTelemetry.id;
+        state.assignedStall = generateStallCode(deckTelemetry);
+        state.holdSecondsRemaining = 15 * 60 - 1; // Reset 14:59 hold countdown
+        state.carAnimProgress = 0; // Restart sporty vehicle trajectory animation
+
+        updateAssignmentHUD(deckTelemetry);
+        renderDecksGrid();
+
+        if (!silent) {
+          playTelemetryChime('assign');
+          showToast(
+            `Assigned: ${deckTelemetry.name}`,
+            `Stall ${state.assignedStall} locked (${deckTelemetry.totalMins} min total trip).`,
+            'success'
+          );
+        }
+      }
+
+      function updateAssignmentHUD(deckTelemetry) {
+        const originObj = ENTRY_GATES[state.origin];
+        const destObj = CAMPUS_BUILDINGS[state.destination];
+
+        document.getElementById('assignedDeckName').textContent = deckTelemetry.name;
+        document.getElementById('assignedSlotCode').textContent = state.assignedStall;
+        document.getElementById('assignedPermitTag').textContent = deckTelemetry.permit;
+        document.getElementById('assignedDriveTime').textContent = `${deckTelemetry.driveMins}m`;
+        document.getElementById('assignedWalkTime').textContent = `${deckTelemetry.walkMins}m`;
+        document.getElementById('assignedTotalTime').textContent = `${deckTelemetry.totalMins}m`;
+        document.getElementById('radarActiveLabel').textContent = `ACTIVE ROUTE: ${deckTelemetry.name.toUpperCase()}`;
+
+        // Update Favorite star button inside assignment card
+        const favBtn = document.getElementById('assignedFavBtn');
+        const isFav = state.favorites.has(deckTelemetry.id);
+        favBtn.innerHTML = isFav
+          ? '<i class="fa-solid fa-star text-amber-400"></i>'
+          : '<i class="fa-regular fa-star text-slate-400"></i>';
+
+        // Build Turn-by-Turn Vector Steps
+        const segments = deckTelemetry.roadSegments[state.origin] || ['Campus Perimeter Rd', 'Deck Entry Gate'];
+        const stepsList = document.getElementById('routeStepsList');
+        stepsList.innerHTML = `
+          <li class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 font-hud text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <span>Enter campus via <strong>${originObj.shortName}</strong> onto <span class="text-sky-700 font-medium">${segments[0]}</span>.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 font-hud text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <span>Follow <span class="text-sky-700 font-medium">${segments[1] || 'Internal Connector'}</span> directly into <strong>${deckTelemetry.name}</strong> (${deckTelemetry.driveMins} min).</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 font-hud text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <span>Park in <strong>${state.assignedStall}</strong>, then walk <strong>${deckTelemetry.walkMins} min</strong> to <strong>${destObj.shortName}</strong>.</span>
+          </li>
+        `;
+      }
+
+      /* ----------------------------------------------------------------------
+         6. FAVORITES MANAGEMENT
+         ---------------------------------------------------------------------- */
+      function saveFavorites() {
+        try {
+          localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify([...state.favorites]));
+        } catch (e) {
+          // Ignore storage quota errors
+        }
+      }
+
+      function toggleFavoriteDeck(deckId) {
+        const deck = PARKING_DECKS.find(d => d.id === deckId);
+        if (!deck) return;
+
+        if (state.favorites.has(deckId)) {
+          state.favorites.delete(deckId);
+          showToast('Removed from Favorites', `${deck.name} removed from your preferred list.`, 'info');
+        } else {
+          state.favorites.add(deckId);
+          playTelemetryChime('fav');
+          showToast('Added to Favorites', `${deck.name} starred for priority routing.`, 'success');
+        }
+
+        saveFavorites();
+        updateFavoriteCounters();
+        renderDecksGrid();
+
+        // Sync assignment card star icon if currently assigned
+        const currentAssigned = computeDeckTelemetry(
+          PARKING_DECKS.find(d => d.id === state.assignedDeckId) || PARKING_DECKS[0]
+        );
+        updateAssignmentHUD(currentAssigned);
+      }
+
+      function updateFavoriteCounters() {
+        const count = state.favorites.size;
+        document.getElementById('favCountLabel').textContent = count;
+        document.getElementById('tabFavCount').textContent = count;
+      }
+
+      /* ----------------------------------------------------------------------
+         7. RENDER PARKING DECKS TELEMETRY GRID
+         ---------------------------------------------------------------------- */
+      function renderDecksGrid() {
+        const grid = document.getElementById('decksGrid');
+        let list = PARKING_DECKS.map(computeDeckTelemetry);
+
+        // Update header total open stalls counter
+        const totalOpen = list.reduce((sum, d) => sum + d.openSpots, 0);
+        document.getElementById('headerTotalOpen').textContent = `${totalOpen.toLocaleString()} STALLS`;
+
+        if (state.deckFilter === 'favorites') {
+          list = list.filter(d => state.favorites.has(d.id));
+        } else if (state.deckFilter === 'available') {
+          list.sort((a, b) => b.pctOpen - a.pctOpen);
+        }
+
+        if (list.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full p-8 rounded-2xl bg-sky-50/70 border border-dashed border-sky-300 text-center">
+              <i class="fa-regular fa-star text-2xl text-amber-400 mb-2"></i>
+              <p class="font-hud text-sm font-bold text-slate-700">No Favorite Garages Selected</p>
+              <p class="text-xs text-slate-500 mt-1">Switch to "All Decks" and click the star icon on any UNCC garage to add favorites.</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = list.map(deck => {
+          const isFav = state.favorites.has(deck.id);
+          const isAssigned = deck.id === state.assignedDeckId;
+
+          // Status badge styling
+          let statusBadge = '';
+          let barGradient = '';
+          if (deck.pctOpen >= 35) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-hud font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">OPTIMAL</span>`;
+            barGradient = 'from-sky-400 to-emerald-500';
+          } else if (deck.pctOpen >= 15) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-hud font-bold bg-sky-100 text-sky-700 border border-sky-200">MODERATE</span>`;
+            barGradient = 'from-sky-500 to-teal-400';
+          } else {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-hud font-bold bg-amber-100 text-amber-700 border border-amber-200">TIGHT</span>`;
+            barGradient = 'from-amber-400 to-orange-400';
+          }
+
+          return `
+            <article class="rounded-2xl p-4 bg-white/90 border transition-all flex flex-col justify-between gap-3 ${
+              isAssigned
+                ? 'border-emerald-400 ring-2 ring-emerald-200/70 shadow-md'
+                : 'border-sky-200/80 hover:border-sky-400 shadow-sm'
+            }">
+              <div>
+                <!-- Header Row -->
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h3 class="font-hud text-sm font-bold text-slate-900">${deck.name}</h3>
+                      ${statusBadge}
+                      ${isAssigned ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-hud font-bold bg-slate-900 text-emerald-300">ASSIGNED</span>' : ''}
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5">${deck.zone} • <span class="text-sky-700 font-medium">${deck.permit}</span></p>
+                  </div>
+
+                  <!-- Favorite Toggle Star -->
+                  <button
+                    type="button"
+                    data-fav-id="${deck.id}"
+                    title="${isFav ? 'Remove from Favorites' : 'Add to Favorites'}"
+                    class="fav-toggle-btn w-9 h-9 rounded-xl border flex items-center justify-center transition cursor-pointer shrink-0 ${
+                      isFav
+                        ? 'bg-amber-50 border-amber-300 text-amber-400 shadow-sm'
+                        : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-amber-400 hover:border-amber-200'
+                    }"
+                    aria-label="Toggle favorite for ${deck.name}"
+                  >
+                    <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star text-sm"></i>
+                  </button>
+                </div>
+
+                <!-- Capacity Tachometer Bar -->
+                <div class="mt-3">
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="font-semibold text-slate-700">
+                      <span class="font-hud font-bold text-emerald-600">${deck.openSpots}</span>
+                      <span class="text-slate-400">/ ${deck.totalSpots} open</span>
+                    </span>
+                    <span class="font-hud text-[11px] font-bold text-sky-700">${deck.pctOpen}% FREE</span>
+                  </div>
+                  <div class="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden p-0.5 border border-sky-100">
+                    <div class="h-full rounded-full bg-gradient-to-r ${barGradient} transition-all duration-500" style="width: ${deck.pctOpen}%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Telemetry & Direct Select CTA -->
+              <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-3 text-slate-600">
+                  <span title="Drive time from selected entrance">
+                    <i class="fa-solid fa-car text-sky-500 mr-1"></i><strong>${deck.driveMins}m</strong>
+                  </span>
+                  <span title="Walk time to target building">
+                    <i class="fa-solid fa-person-walking text-emerald-500 mr-1"></i><strong>${deck.walkMins}m</strong>
+                  </span>
+                  <span class="text-slate-400">|</span>
+                  <span class="font-hud font-bold text-teal-700">${deck.totalMins}m total</span>
+                </div>
+
+                <button
+                  type="button"
+                  data-assign-id="${deck.id}"
+                  class="direct-assign-btn px-3 py-1.5 rounded-xl font-hud text-[10px] font-bold uppercase tracking-wider transition cursor-pointer ${
+                    isAssigned
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-sky-50 hover:bg-gradient-to-r hover:from-sky-500 hover:to-emerald-500 text-sky-700 hover:text-white border border-sky-200'
+                  }"
+                >
+                  ${isAssigned ? 'Active' : 'Select'}
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      /* ----------------------------------------------------------------------
+         8. INTERACTIVE GEODESIC CAMPUS RADAR CANVAS
+         ---------------------------------------------------------------------- */
+      const canvas = document.getElementById('campusRadarCanvas');
+      const ctx = canvas.getContext('2d');
+      let canvasWidth = 0;
+      let canvasHeight = 0;
+      let renderedNodeHitboxes = [];
+
+      function resizeRadarCanvas() {
+        const container = document.getElementById('radarContainer');
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvasWidth = rect.width;
+        canvasHeight = rect.height;
+        canvas.width = Math.floor(canvasWidth * dpr);
+        canvas.height = Math.floor(canvasHeight * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      // Stylized UNCC Campus Arterial Road Polylines (Normalized 0..1 coordinates)
+      const CAMPUS_ROADS = [
+        // Hwy 49 (South-East border)
+        { name: 'Hwy 49', points: [{ x: 0.35, y: 0.96 }, { x: 0.62, y: 0.90 }, { x: 0.88, y: 0.62 }, { x: 0.96, y: 0.35 }] },
+        // University City Blvd (North-West border)
+        { name: 'U-City Blvd', points: [{ x: 0.04, y: 0.32 }, { x: 0.28, y: 0.12 }, { x: 0.65, y: 0.08 }, { x: 0.92, y: 0.14 }] },
+        // Cameron Blvd (East-West/North-South internal spine)
+        { name: 'Cameron Blvd', points: [{ x: 0.62, y: 0.90 }, { x: 0.64, y: 0.62 }, { x: 0.72, y: 0.42 }, { x: 0.80, y: 0.21 }, { x: 0.88, y: 0.14 }] },
+        // Mary Alexander Rd & Broadrick Blvd (West spine)
+        { name: 'Mary Alexander Rd', points: [{ x: 0.28, y: 0.12 }, { x: 0.26, y: 0.35 }, { x: 0.24, y: 0.56 }, { x: 0.38, y: 0.76 }, { x: 0.53, y: 0.81 }] },
+        // Craver Rd / Alumni Way (Core connector)
+        { name: 'Craver Rd', points: [{ x: 0.08, y: 0.56 }, { x: 0.24, y: 0.56 }, { x: 0.35, y: 0.43 }, { x: 0.58, y: 0.45 }, { x: 0.72, y: 0.42 }] }
+      ];
+
+      function drawRadarFrame() {
+        if (!canvasWidth || !canvasHeight) return;
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+        // 1. Subtle Epcot Geodesic Concentric Radar Rings & Triangle Grid
+        const cx = canvasWidth * 0.5;
+        const cy = canvasHeight * 0.5;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(14, 165, 233, 0.12)';
+        ctx.lineWidth = 1;
+        [0.18, 0.34, 0.5, 0.68].forEach(rFactor => {
+          ctx.beginPath();
+          ctx.arc(cx, cy, Math.min(canvasWidth, canvasHeight) * rFactor, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+
+        // Geodesic radial spokes
+        for (let i = 0; i < 12; i++) {
+          const angle = (i * Math.PI) / 6;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + Math.cos(angle) * canvasWidth * 0.6, cy + Math.sin(angle) * canvasHeight * 0.6);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // 2. Draw Campus Arterial Roads with Live Traffic Flow Tint
+        const roadColor =
+          state.trafficMode === 'rush'
+            ? 'rgba(245, 158, 11, 0.32)'
+            : state.trafficMode === 'clear'
+            ? 'rgba(16, 185, 129, 0.32)'
+            : 'rgba(14, 165, 233, 0.26)';
+
+        CAMPUS_ROADS.forEach(road => {
+          ctx.save();
+          ctx.beginPath();
+          road.points.forEach((pt, idx) => {
+            const px = pt.x * canvasWidth;
+            const py = pt.y * canvasHeight;
+            if (idx === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          });
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 7;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+
+          ctx.strokeStyle = roadColor;
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          ctx.restore();
+        });
+
+        // 3. Draw Active Vehicle Trajectory (Origin Gate -> Assigned Deck) & Walking Path (Deck -> Building)
+        const originObj = ENTRY_GATES[state.origin];
+        const destObj = CAMPUS_BUILDINGS[state.destination];
+        const assignedDeck = PARKING_DECKS.find(d => d.id === state.assignedDeckId) || PARKING_DECKS[0];
+
+        const ox = originObj.coords.x * canvasWidth;
+        const oy = originObj.coords.y * canvasHeight;
+        const dx = assignedDeck.coords.x * canvasWidth;
+        const dy = assignedDeck.coords.y * canvasHeight;
+        const bx = destObj.coords.x * canvasWidth;
+        const by = destObj.coords.y * canvasHeight;
+
+        // Curved Drive Trajectory
+        const midX = (ox + dx) / 2 + (dy - oy) * 0.14;
+        const midY = (oy + dy) / 2 - (dx - ox) * 0.14;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.quadraticCurveTo(midX, midY, dx, dy);
+        const driveGrad = ctx.createLinearGradient(ox, oy, dx, dy);
+        driveGrad.addColorStop(0, '#0ea5e9');
+        driveGrad.addColorStop(1, '#10b981');
+        ctx.strokeStyle = driveGrad;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Dashed Pedestrian Walking Vector (Deck -> Target Building)
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(dx, dy);
+        ctx.lineTo(bx, by);
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. Draw Origin Gate Marker
+        ctx.save();
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(ox, oy, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = '#0369a1';
+        ctx.fillText('ENTRY', ox - 15, oy - 10);
+        ctx.restore();
+
+        // 5. Draw Target Campus Building Destination Beacon
+        ctx.save();
+        ctx.fillStyle = '#059669';
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 9);
+        ctx.lineTo(bx + 8, by);
+        ctx.lineTo(bx, by + 9);
+        ctx.lineTo(bx - 8, by);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.font = '700 10px Inter, sans-serif';
+        ctx.fillStyle = '#065f46';
+        ctx.fillText(destObj.shortName, bx + 11, by + 3);
+        ctx.restore();
+
+        // 6. Draw All 8 UNCC Parking Deck Geodesic Nodes
+        renderedNodeHitboxes = [];
+        PARKING_DECKS.forEach(deck => {
+          const nx = deck.coords.x * canvasWidth;
+          const ny = deck.coords.y * canvasHeight;
+          const pctOpen = deck.openSpots / deck.totalSpots;
+          const isAssigned = deck.id === state.assignedDeckId;
+          const isFav = state.favorites.has(deck.id);
+
+          let nodeColor = '#10b981'; // Optimal Mint
+          if (pctOpen < 0.15) nodeColor = '#f59e0b'; // Tight Amber
+          else if (pctOpen < 0.35) nodeColor = '#0ea5e9'; // Moderate Sky
+
+          // Pulse halo for assigned deck
+          if (isAssigned) {
+            const haloRadius = 15 + Math.sin(state.pulsePhase) * 4;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(nx, ny, haloRadius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // Node Circle
+          const radius = isAssigned ? 11 : 8.5;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(nx, ny, radius, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.lineWidth = isAssigned ? 3.5 : 2.5;
+          ctx.strokeStyle = nodeColor;
+          ctx.stroke();
+
+          // Inner status dot
+          ctx.beginPath();
+          ctx.arc(nx, ny, radius * 0.45, 0, Math.PI * 2);
+          ctx.fillStyle = nodeColor;
+          ctx.fill();
+
+          // Favorite Star Indicator
+          if (isFav) {
+            ctx.font = '900 11px "Font Awesome 6 Free"';
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText('\uf005', nx + 8, ny - 6);
+          }
+
+          // Label pill
+          ctx.font = isAssigned ? '700 11px Orbitron, sans-serif' : '600 10px Inter, sans-serif';
+          ctx.fillStyle = isAssigned ? '#0f172a' : '#334155';
+          ctx.fillText(deck.name, nx - 24, ny + radius + 12);
+          ctx.restore();
+
+          renderedNodeHitboxes.push({
+            id: deck.id,
+            x: nx,
+            y: ny,
+            r: 18
+          });
+        });
+
+        // 7. Animate Sporty Coupe Telemetry Capsule Moving Along Quadratic Curve
+        const t = state.carAnimProgress;
+        const carX = (1 - t) * (1 - t) * ox + 2 * (1 - t) * t * midX + t * t * dx;
+        const carY = (1 - t) * (1 - t) * oy + 2 * (1 - t) * t * midY + t * t * dy;
+
+        // Tangent angle for sporty car rotation
+        const dtx = 2 * (1 - t) * (midX - ox) + 2 * t * (dx - midX);
+        const dty = 2 * (1 - t) * (midY - oy) + 2 * t * (dy - midY);
+        const angle = Math.atan2(dty, dtx);
+
+        ctx.save();
+        ctx.translate(carX, carY);
+        ctx.rotate(angle);
+
+        // Sporty car glow
+        ctx.shadowColor = 'rgba(14, 165, 233, 0.55)';
+        ctx.shadowBlur = 10;
+
+        // Sleek aerodynamic chassis
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.roundRect(-10, -5, 20, 10, 4);
+        ctx.fill();
+
+        // Mint/Cyan racing stripe
+        ctx.fillStyle = '#34d399';
+        ctx.fillRect(-6, -1.5, 12, 3);
+
+        // Headlight beams
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(8, -3.5, 2.5, 2);
+        ctx.fillRect(8, 1.5, 2.5, 2);
+        ctx.restore();
+      }
+
+      function animationLoop() {
+        state.pulsePhase += 0.06;
+        state.carAnimProgress += 0.0045;
+        if (state.carAnimProgress > 1) {
+          state.carAnimProgress = 0;
+        }
+        drawRadarFrame();
+        requestAnimationFrame(animationLoop);
+      }
+
+      /* ----------------------------------------------------------------------
+         9. LIVE TELEMETRY TICKER & COUNTDOWN TIMERS
+         ---------------------------------------------------------------------- */
+      function startTelemetryTimers() {
+        // 1-second hold countdown timer
+        setInterval(() => {
+          if (state.holdSecondsRemaining > 0) {
+            state.holdSecondsRemaining -= 1;
+            const mins = Math.floor(state.holdSecondsRemaining / 60);
+            const secs = state.holdSecondsRemaining % 60;
+            document.getElementById('holdTimerDisplay').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+          }
+        }, 1000);
+
+        // 5-second live campus parking sensor fluctuation simulation
+        setInterval(() => {
+          PARKING_DECKS.forEach(deck => {
+            const delta = Math.floor(Math.random() * 9) - 4; // -4 to +4 vehicles entering/exiting
+            const minFloor = state.trafficMode === 'rush' ? 18 : 65;
+            deck.openSpots = Math.max(minFloor, Math.min(deck.totalSpots - 25, deck.openSpots + delta));
+          });
+          renderDecksGrid();
+        }, 5000);
+      }
+
+      /* ----------------------------------------------------------------------
+         10. EVENT LISTENERS & INITIALIZATION
+         ---------------------------------------------------------------------- */
+      function initEventListeners() {
+        // Origin & Destination Dropdowns
+        document.getElementById('originSelect').addEventListener('change', e => {
+          state.origin = e.target.value;
+          optimizeAndAssign(null, false);
+        });
+
+        document.getElementById('destinationSelect').addEventListener('change', e => {
+          state.destination = e.target.value;
+          optimizeAndAssign(null, false);
+        });
+
+        // Favorites-Only Lock Switch
+        document.getElementById('favoritesOnlyToggle').addEventListener('change', e => {
+          state.favoritesOnly = e.target.checked;
+          if (state.favoritesOnly) {
+            showToast(
+              'Favorites-Only Lock Engaged',
+              `Routing exclusively across your ${state.favorites.size} starred garage(s).`,
+              'info'
+            );
+            optimizeAndAssign(null, true);
+          } else {
+            showToast('All-Campus Mode Engaged', 'Optimizing across all 8 UNC Charlotte parking decks.', 'info');
+            optimizeAndAssign(null, true);
+          }
+        });
+
+        // Main Optimize & Assign CTA Button
+        document.getElementById('optimizeBtn').addEventListener('click', () => {
+          optimizeAndAssign(null, false);
+        });
+
+        // Favorite star inside Assigned Stall Card
+        document.getElementById('assignedFavBtn').addEventListener('click', () => {
+          toggleFavoriteDeck(state.assignedDeckId);
+        });
+
+        // Copy Stall Pass Button (Uses textarea + document.execCommand('copy') for iframe compatibility)
+        document.getElementById('copyPassBtn').addEventListener('click', () => {
+          const deck = PARKING_DECKS.find(d => d.id === state.assignedDeckId) || PARKING_DECKS[0];
+          const dest = CAMPUS_BUILDINGS[state.destination];
+          const passText = `NINER ORBIT PASS | ${deck.name} | ${state.assignedStall} | Dest: ${dest.shortName}`;
+
+          const tempInput = document.createElement('textarea');
+          tempInput.value = passText;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          try {
+            document.execCommand('copy');
+            showToast('Stall Pass Copied', passText, 'success');
+            playTelemetryChime('fav');
+          } catch (err) {
+            showToast('Pass Ready', passText, 'info');
+          }
+          document.body.removeChild(tempInput);
+        });
+
+        // Re-roll New Stall in Same Deck
+        document.getElementById('rerollSlotBtn').addEventListener('click', () => {
+          const current = computeDeckTelemetry(
+            PARKING_DECKS.find(d => d.id === state.assignedDeckId) || PARKING_DECKS[0]
+          );
+          applyAssignment(current, false);
+        });
+
+        // Traffic Scenario Buttons (Live Flow / Class Rush / Clear Orbit)
+        document.querySelectorAll('.traffic-mode-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.trafficMode = btn.dataset.traffic;
+
+            document.querySelectorAll('.traffic-mode-btn').forEach(b => {
+              b.classList.remove('bg-white', 'text-sky-700', 'shadow-sm');
+              b.classList.add('text-slate-600');
+            });
+            btn.classList.add('bg-white', 'text-sky-700', 'shadow-sm');
+            btn.classList.remove('text-slate-600');
+
+            // Update status labels & spot densities
+            const badge = document.getElementById('trafficMultiplierBadge');
+            const hwy = document.getElementById('roadHwy49Status');
+            const ucity = document.getElementById('roadUCityStatus');
+            const core = document.getElementById('roadCoreStatus');
+
+            if (state.trafficMode === 'rush') {
+              badge.textContent = '1.65x RUSH';
+              badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-hud font-bold bg-amber-100 text-amber-800 border border-amber-300';
+              hwy.textContent = 'Heavy';
+              hwy.className = 'text-amber-600 font-semibold';
+              ucity.textContent = 'Moderate';
+              ucity.className = 'text-amber-600 font-semibold';
+              core.textContent = 'Congested';
+              core.className = 'text-amber-600 font-semibold';
+              PARKING_DECKS.forEach(d => {
+                d.openSpots = Math.max(22, Math.round(d.totalSpots * (0.08 + Math.random() * 0.22)));
+              });
+            } else if (state.trafficMode === 'clear') {
+              badge.textContent = '0.85x CLEAR';
+              badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-hud font-bold bg-sky-100 text-sky-800 border border-sky-300';
+              hwy.textContent = 'Wide Open';
+              hwy.className = 'text-emerald-600 font-semibold';
+              ucity.textContent = 'Wide Open';
+              ucity.className = 'text-emerald-600 font-semibold';
+              core.textContent = 'Optimal';
+              core.className = 'text-emerald-600 font-semibold';
+              PARKING_DECKS.forEach(d => {
+                d.openSpots = Math.round(d.totalSpots * (0.55 + Math.random() * 0.3));
+              });
+            } else {
+              badge.textContent = '1.0x FLOW';
+              badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-hud font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+              hwy.textContent = 'Smooth';
+              hwy.className = 'text-emerald-600 font-semibold';
+              ucity.textContent = 'Smooth';
+              ucity.className = 'text-emerald-600 font-semibold';
+              core.textContent = 'Nominal';
+              core.className = 'text-sky-600 font-semibold';
+              PARKING_DECKS.forEach(d => {
+                d.openSpots = Math.round(d.totalSpots * (0.25 + Math.random() * 0.35));
+              });
+            }
+
+            optimizeAndAssign(null, true);
+            showToast('Traffic Telemetry Updated', `Switched campus grid to ${btn.textContent.trim()} profile.`, 'info');
+          });
+        });
+
+        // Audio Toggle Button
+        document.getElementById('audioToggleBtn').addEventListener('click', () => {
+          state.audioEnabled = !state.audioEnabled;
+          const icon = document.getElementById('audioIcon');
+          icon.className = state.audioEnabled
+            ? 'fa-solid fa-volume-high text-sm'
+            : 'fa-solid fa-volume-xmark text-sm text-slate-400';
+          if (state.audioEnabled) playTelemetryChime('fav');
+        });
+
+        // Deck Grid Filter Tabs
+        document.querySelectorAll('.deck-filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.deckFilter = btn.dataset.filter;
+            document.querySelectorAll('.deck-filter-btn').forEach(b => {
+              b.classList.remove('bg-white', 'text-sky-700', 'shadow-sm');
+              b.classList.add('text-slate-600');
+            });
+            btn.classList.add('bg-white', 'text-sky-700', 'shadow-sm');
+            btn.classList.remove('text-slate-600');
+            renderDecksGrid();
+          });
+        });
+
+        // Delegated Click Events inside Decks Grid (Favorite Star & Direct Select)
+        document.getElementById('decksGrid').addEventListener('click', e => {
+          const favBtn = e.target.closest('.fav-toggle-btn');
+          if (favBtn) {
+            toggleFavoriteDeck(favBtn.dataset.favId);
+            return;
+          }
+          const assignBtn = e.target.closest('.direct-assign-btn');
+          if (assignBtn) {
+            optimizeAndAssign(assignBtn.dataset.assignId, false);
+          }
+        });
+
+        // Interactive Radar Canvas Click / Tap on Parking Deck Nodes
+        canvas.addEventListener('click', e => {
+          const rect = canvas.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const clickY = e.clientY - rect.top;
+
+          for (const node of renderedNodeHitboxes) {
+            const dist = Math.hypot(clickX - node.x, clickY - node.y);
+            if (dist <= node.r) {
+              optimizeAndAssign(node.id, false);
+              break;
+            }
+          }
+        });
+
+        window.addEventListener('resize', resizeRadarCanvas);
+      }
+
+      // Boot Application on Window Load
+      window.addEventListener('load', () => {
+        updateFavoriteCounters();
+        initEventListeners();
+        resizeRadarCanvas();
+        optimizeAndAssign(null, true);
+        startTelemetryTimers();
+        animationLoop();
+      });
+    })();
+  </script>
+</body>
+</html>
